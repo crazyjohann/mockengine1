@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loading…</title>
+<style>html,body{margin:0;height:100%;background:#111;color:#bbb;font-family:system-ui,sans-serif}
+#msg{display:flex;height:100%;align-items:center;justify-content:center;text-align:center;padding:1rem}</style>
+<script src="/scram/scramjet.all.js"></script>
+<script src="/baremux/index.js"></script>
+<script src="/register-sw.js"></script>
+</head>
+<body>
+<div id="msg">Loading…</div>
+<script>
+// Usage: /go.html?url=example.com   or   /go.html?q=search words
+(async () => {
+  const msg = document.getElementById("msg");
+  const p = new URLSearchParams(location.search);
+  const input = (p.get("url") || p.get("q") || "").trim();
+  if (!input) { msg.textContent = "No URL given. Use /go.html?url=example.com"; return; }
+
+  let url = null;
+  try { url = new URL(input).toString(); } catch {}
+  if (!url) { try { const u = new URL("https://" + input); if (u.hostname.includes(".")) url = u.toString(); } catch {} }
+  if (!url) url = "https://duckduckgo.com/?q=" + encodeURIComponent(input);
+
+  try {
+    const { ScramjetController } = $scramjetLoadController();
+    const sj = new ScramjetController({
+      files: { wasm: "/scram/scramjet.wasm.wasm", all: "/scram/scramjet.all.js", sync: "/scram/scramjet.sync.js" },
+    });
+    await sj.init();
+    await registerSW();
+    await navigator.serviceWorker.ready;
+    const conn = new BareMux.BareMuxConnection("/baremux/worker.js");
+    const wisp = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/wisp/";
+    if ((await conn.getTransport()) !== "/libcurl/index.mjs") {
+      await conn.setTransport("/libcurl/index.mjs", [{ websocket: wisp }]);
+    }
+    location.replace(sj.encodeUrl(url));
+  } catch (e) {
+    msg.textContent = "Proxy failed to start: " + e;
+  }
+})();
+</script>
+</body>
+</html>
