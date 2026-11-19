@@ -18,6 +18,8 @@
   const msg = document.getElementById("msg");
   const p = new URLSearchParams(location.search);
   const input = (p.get("url") || p.get("q") || "").trim();
+  if (p.get("retry") && sessionStorage.getItem("sjRetry") === input) { msg.textContent = "The engine could not start. Try Chrome on https."; return; }
+  try { if (p.get("retry")) sessionStorage.setItem("sjRetry", input); } catch {}
   if (!input) { msg.textContent = "No URL given. Use /go.html?url=example.com"; return; }
 
   let url = null;
