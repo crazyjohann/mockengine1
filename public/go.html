@@ -42,8 +42,8 @@
     step("connecting");
     const conn = new BareMux.BareMuxConnection("/baremux/worker.js");
     const wisp = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/wisp/";
-    if ((await timeout(conn.getTransport(), "checking transport")) !== "/libcurl/index.mjs") {
-      await timeout(conn.setTransport("/libcurl/index.mjs", [{ websocket: wisp }]), "setting transport");
+    if ((await timeout(conn.getTransport(), "checking transport")) !== "/epoxy/index.mjs") {
+      await timeout(conn.setTransport("/epoxy/index.mjs", [{ wisp }]), "setting transport");
     }
     step("opening site");
     const frame = sj.createFrame();
