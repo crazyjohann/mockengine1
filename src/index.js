@@ -17,7 +17,8 @@ const publicPath = fileURLToPath(new URL("../public/", import.meta.url));
 logging.set_level(logging.NONE);
 Object.assign(wisp.options, {
 	allow_udp_streams: false,
-	dns_servers: ["1.1.1.1", "1.0.0.1"],
+	dns_method: "lookup",
+	dns_result_order: "ipv4first",
 });
 
 const fastify = Fastify({
