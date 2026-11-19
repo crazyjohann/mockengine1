@@ -27,19 +27,25 @@
   if (!url) { try { const u = new URL("https://" + input); if (u.hostname.includes(".")) url = u.toString(); } catch {} }
   if (!url) url = "https://duckduckgo.com/?q=" + encodeURIComponent(input);
 
+  const step = (t) => { msg.textContent = "Loading… (" + t + ")"; };
+  const timeout = (pr, t) => Promise.race([pr, new Promise((_, r) => setTimeout(() => r(new Error("stuck at: " + t)), 15000))]);
   try {
+    step("starting engine");
     const { ScramjetController } = $scramjetLoadController();
     const sj = new ScramjetController({
       files: { wasm: "/scram/scramjet.wasm.wasm", all: "/scram/scramjet.all.js", sync: "/scram/scramjet.sync.js" },
     });
-    await sj.init();
-    await registerSW();
-    await navigator.serviceWorker.ready;
+    await timeout(sj.init(), "engine init");
+    step("background worker");
+    await timeout(registerSW(), "registering worker");
+    await timeout(navigator.serviceWorker.ready, "worker ready");
+    step("connecting");
     const conn = new BareMux.BareMuxConnection("/baremux/worker.js");
     const wisp = (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/wisp/";
-    if ((await conn.getTransport()) !== "/libcurl/index.mjs") {
-      await conn.setTransport("/libcurl/index.mjs", [{ websocket: wisp }]);
+    if ((await timeout(conn.getTransport(), "checking transport")) !== "/libcurl/index.mjs") {
+      await timeout(conn.setTransport("/libcurl/index.mjs", [{ websocket: wisp }]), "setting transport");
     }
+    step("opening site");
     location.replace(sj.encodeUrl(url));
   } catch (e) {
     msg.textContent = "Proxy failed to start: " + e;
