@@ -46,7 +46,12 @@
       await timeout(conn.setTransport("/libcurl/index.mjs", [{ websocket: wisp }]), "setting transport");
     }
     step("opening site");
-    location.replace(sj.encodeUrl(url));
+    const frame = sj.createFrame();
+    frame.frame.style.cssText = "position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff";
+    frame.frame.setAttribute("allow", "fullscreen; clipboard-read; clipboard-write");
+    document.body.appendChild(frame.frame);
+    frame.go(url);
+    try { sessionStorage.removeItem("sjRetry"); } catch {}
   } catch (e) {
     msg.textContent = "Proxy failed to start: " + e;
   }
