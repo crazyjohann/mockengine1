@@ -31,6 +31,28 @@
 
   const step = (t) => { msg.textContent = "Loading… (" + t + ")"; };
   const timeout = (pr, t) => Promise.race([pr, new Promise((_, r) => setTimeout(() => r(new Error("stuck at: " + t)), 15000))]);
+  // Games don't run well through the proxy, so CrazyGames game pages load
+  // CrazyGames' official embed directly instead.
+  const gameEmbed = (u) => {
+    try {
+      const x = new URL(u);
+      const m = x.pathname.match(/^\/game\/([a-z0-9-]+)/i);
+      if (/(^|\.)crazygames\.com$/i.test(x.hostname) && m) return "https://www.crazygames.com/embed/" + m[1];
+    } catch {}
+    return null;
+  };
+  const showDirect = (src) => {
+    document.querySelectorAll("iframe").forEach((f) => f.remove());
+    const f = document.createElement("iframe");
+    f.setAttribute("credentialless", "");
+    f.setAttribute("allow", "fullscreen; autoplay; gamepad; clipboard-read; clipboard-write");
+    f.allowFullscreen = true;
+    f.style.cssText = "position:fixed;inset:0;width:100%;height:100%;border:0;background:#000";
+    f.src = src;
+    document.body.appendChild(f);
+  };
+  if (gameEmbed(url)) { showDirect(gameEmbed(url)); return; }
+
   try {
     step("starting engine");
     const { ScramjetController } = $scramjetLoadController();
@@ -52,6 +74,9 @@
     frame.frame.style.cssText = "position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff";
     frame.frame.setAttribute("allow", "fullscreen; clipboard-read; clipboard-write");
     document.body.appendChild(frame.frame);
+    const onChange = (e) => { const g = gameEmbed(e.url); if (g) showDirect(g); };
+    frame.addEventListener("navigate", onChange);
+    frame.addEventListener("urlchange", onChange);
     frame.go(url);
     try { sessionStorage.removeItem("sjRetry"); } catch {}
   } catch (e) {
