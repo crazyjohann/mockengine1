@@ -25,7 +25,7 @@
   let url = null;
   try { url = new URL(input).toString(); } catch {}
   if (!url) { try { const u = new URL("https://" + input); if (u.hostname.includes(".")) url = u.toString(); } catch {} }
-  if (!url) url = "https://duckduckgo.com/?q=" + encodeURIComponent(input);
+  if (!url) url = "https://www.bing.com/search?q=" + encodeURIComponent(input);
 
   const step = (t) => { msg.textContent = "Loading… (" + t + ")"; };
   const timeout = (pr, t) => Promise.race([pr, new Promise((_, r) => setTimeout(() => r(new Error("stuck at: " + t)), 15000))]);
