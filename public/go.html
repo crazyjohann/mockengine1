@@ -23,8 +23,10 @@
   if (!input) { msg.textContent = "No URL given. Use /go.html?url=example.com"; return; }
 
   let url = null;
-  try { url = new URL(input).toString(); } catch {}
-  if (!url) { try { const u = new URL("https://" + input); if (u.hostname.includes(".")) url = u.toString(); } catch {} }
+  const looksLikeUrl = /^(https?:\/\/)?[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}(:\d+)?([\/?#].*)?$/i;
+  if (!/\s/.test(input) && looksLikeUrl.test(input)) {
+    try { url = new URL(/^https?:\/\//i.test(input) ? input : "https://" + input).toString(); } catch {}
+  }
   if (!url) url = "https://www.google.com/search?q=" + encodeURIComponent(input);
 
   const step = (t) => { msg.textContent = "Loading… (" + t + ")"; };
